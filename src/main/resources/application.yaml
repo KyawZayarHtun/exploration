@@ -20,8 +20,8 @@ resilience4j:
         sliding-window-type: count_based
         sliding-window-size: 5
         wait-duration-in-open-state:
-          seconds: 10
-        permitted-number-of-calls-in-half-open-state: 2
+          seconds: 1
+        permitted-number-of-calls-in-half-open-state: 1
 
     instances:
       backendA:

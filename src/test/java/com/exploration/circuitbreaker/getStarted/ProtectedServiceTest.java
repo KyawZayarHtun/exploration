@@ -1,5 +1,6 @@
 package com.exploration.circuitbreaker.getStarted;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,9 +24,13 @@ public class ProtectedServiceTest {
     @Autowired
     private CircuitBreakerRegistry circuitBreakerRegistry;
 
+    private CircuitBreaker circuitBreaker;
+
     @BeforeEach
     void resetCircuitBreaker() {
-        circuitBreakerRegistry.circuitBreaker("backendA").reset();
+        reset(flakyService);
+        circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA");
+        circuitBreaker.transitionToClosedState();
     }
 
     @Test
@@ -36,19 +41,27 @@ public class ProtectedServiceTest {
 
         Assertions.assertEquals("Real Data", result);
 
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
         verify(flakyService, times(1)).getData();
     }
 
     @Test
     void testCircuitBreaker_Open_and_TriggersFallback() {
+        // arrange
         when(flakyService.getData())
                 .thenThrow(new RuntimeException("Service Failed!"));
 
+        // act
         for (int i = 0; i < 5; i++) {
             String result1= protectedService.callFlakyService();
             assertThat(result1).isEqualTo("Default Data (Fallback)");
         }
 
+        // assert
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+
+        // prove
         verify(flakyService, times(5)).getData();
 
         // Act (Phase 2: Test the OPEN state)
@@ -62,18 +75,69 @@ public class ProtectedServiceTest {
         verify(flakyService, times(5)).getData();
     }
 
-    /*@Test
-    void whenFlakyServiceFails_thenFallbackIsCalled() {
-        // Given - simulate failure
-        doThrow(new RuntimeException("Remote service failed"))
-                .when(flakyService)
-                .getData();
+    @Test
+    void testCircuitBreaker_HalfOpen_to_Closed() {
+        // --- Arrange ---
+        // 1. Force the circuit to OPEN
+        circuitBreaker.transitionToOpenState();
 
-        // When
+        // 2. Force it to HALF-OPEN (bypassing the 1s wait)
+        circuitBreaker.transitionToHalfOpenState();
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+
+        // 3. Tell the mock to SUCCEED on this one call
+        when(flakyService.getData()).thenReturn("Success!");
+
+        // --- Act ---
+        // 4. Make the one permitted "test call"
         String result = protectedService.callFlakyService();
 
-        // Then
-        assertThat(result).isEqualTo("Recovered from remote service");
-    }*/
+        // --- Assert ---
+        // 5. The call should have succeeded
+        assertThat(result).isEqualTo("Success!");
+
+        // 6. The circuit should now be CLOSED! (This is the magic)
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        // 7. Prove it: Call again, it should still succeed
+        String nextResult = protectedService.callFlakyService();
+        assertThat(nextResult).isEqualTo("Success!");
+
+        // 8. The mock was called twice (once in HALF-OPEN, once in CLOSED)
+        verify(flakyService, times(2)).getData();
+    }
+
+    // --- NEW TEST 2: HALF-OPEN back to OPEN ---
+
+    @Test
+    void testCircuitBreaker_HalfOpen_to_Open() {
+        // --- Arrange ---
+        // 1. Force the circuit to OPEN, then HALF-OPEN
+        circuitBreaker.transitionToOpenState();
+        circuitBreaker.transitionToHalfOpenState();
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+
+        // 2. Tell the mock to FAIL on the test call
+        when(flakyService.getData()).thenThrow(new RuntimeException("Failed again!"));
+
+        // --- Act ---
+        // 3. Make the one permitted "test call"
+        String result = protectedService.callFlakyService();
+
+        // --- Assert ---
+        // 4. The call should fail and return the fallback
+        assertThat(result).isEqualTo("Default Data (Fallback)");
+
+        // 5. The circuit should immediately go *back* to OPEN
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+
+        // 6. Prove it: Call again, it should be short-circuited
+        String nextResult = protectedService.callFlakyService();
+        assertThat(nextResult).isEqualTo("Default Data (Fallback)");
+
+        // 7. The mock was only called ONCE (the failed half-open attempt)
+        // The second call was short-circuited by the now-OPEN circuit.
+        verify(flakyService, times(1)).getData();
+    }
 
 }
