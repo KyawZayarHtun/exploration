@@ -1,3 +1,28 @@
 spring:
   application:
     name: exploration
+  aop:
+    proxy-target-class: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - resilience4j
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        failure-rate-threshold: 60
+        sliding-window-type: count_based
+        sliding-window-size: 5
+        wait-duration-in-open-state:
+          seconds: 10
+        permitted-number-of-calls-in-half-open-state: 2
+
+    instances:
+      backendA:
+        base-config: default
