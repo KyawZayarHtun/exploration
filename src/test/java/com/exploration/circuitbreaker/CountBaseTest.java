@@ -1,5 +1,7 @@
-package com.exploration.circuitbreaker.getStarted;
+package com.exploration.circuitbreaker;
 
+import com.exploration.circuitbreaker.getStarted.FlakyService;
+import com.exploration.circuitbreaker.getStarted.ProtectedService;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.jupiter.api.Assertions;
@@ -7,13 +9,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-public class ProtectedServiceTest {
+@ActiveProfiles("cb-count-base")
+public class CountBaseTest {
 
     @MockitoBean
     private FlakyService flakyService;
@@ -30,7 +34,7 @@ public class ProtectedServiceTest {
     void resetCircuitBreaker() {
         reset(flakyService);
         circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA");
-        circuitBreaker.transitionToClosedState();
+        circuitBreaker.reset();
     }
 
     @Test
@@ -47,7 +51,7 @@ public class ProtectedServiceTest {
     }
 
     @Test
-    void testCircuitBreaker_Open_and_TriggersFallback() {
+    void testCircuitBreaker_Closed_to_Open() {
         // arrange
         when(flakyService.getData())
                 .thenThrow(new RuntimeException("Service Failed!"));

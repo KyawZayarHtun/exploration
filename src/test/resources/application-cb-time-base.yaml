@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: exploration
+  aop:
+    proxy-target-class: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - resilience4j
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        # If 50% of those calls fail, open the circuit
+        failure-rate-threshold: 50
+        # Use TIME_BASED sliding window
+        sliding-window-type: TIME_BASED
+        # The window is 2 seconds long
+        sliding-window-size: 2
+        # We need at least 3 calls in those 2 seconds to calculate a failure rate
+        minimum-number-of-calls: 3
+        # After opening, wait 10 seconds before transitioning to HALF_OPEN
+        # We use a long time here to show that we can bypass it in the test.
+        wait-duration-in-open-state:
+          seconds: 10s
+        # When in HALF_OPEN, permit 2 test calls
+        permitted-number-of-calls-in-half-open-state: 2
+
+    instances:
+      backendA:
+        base-config: default
