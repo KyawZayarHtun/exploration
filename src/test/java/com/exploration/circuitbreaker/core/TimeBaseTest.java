@@ -1,7 +1,5 @@
-package com.exploration.circuitbreaker;
+package com.exploration.circuitbreaker.core;
 
-import com.exploration.circuitbreaker.getStarted.FlakyService;
-import com.exploration.circuitbreaker.getStarted.ProtectedService;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.jupiter.api.BeforeEach;

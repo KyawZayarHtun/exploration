@@ -1,4 +1,4 @@
-package com.exploration.circuitbreaker.getStarted;
+package com.exploration.circuitbreaker.core;
 
 import org.springframework.stereotype.Service;
 
