@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-@ActiveProfiles("cb-time-base")
+@ActiveProfiles("test")
 public class TimeBaseTest {
 
     @MockitoBean
@@ -32,7 +32,7 @@ public class TimeBaseTest {
     @BeforeEach
     void resetCircuitBreaker() {
         reset(flakyService);
-        circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA");
+        circuitBreaker = circuitBreakerRegistry.circuitBreaker("time-base");
         circuitBreaker.reset();
     }
 
@@ -52,9 +52,9 @@ public class TimeBaseTest {
         // Act: Call the service 3 times. All calls will be made (and fallbacks triggered)
         // because the test will run within the 2-second sliding window.
         System.out.println("Calling service (Call 1)...");
-        protectedService.callFlakyService(); // Fails, fallback
+        protectedService.callFlakyService("time-base"); // Fails, fallback
         System.out.println("Calling service (Call 2)...");
-        protectedService.callFlakyService(); // Fails, fallback
+        protectedService.callFlakyService("time-base"); // Fails, fallback
 
         // We will wait to pass sliding window size
         try {
@@ -64,7 +64,7 @@ public class TimeBaseTest {
         }
 
         System.out.println("Calling service (Call 3)...");
-        protectedService.callFlakyService(); // Succeeds
+        protectedService.callFlakyService("time-base"); // Succeeds
 
         // Assert:
         // After 3 calls (minimumNumberOfCalls), the failure rate is 1/3 because we wait 3 sec for reset.
@@ -72,7 +72,7 @@ public class TimeBaseTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         // Act 2: Call one more time
-        String result = protectedService.callFlakyService();
+        String result = protectedService.callFlakyService("time-base");
 
         // Assert 2:
         // The circuit is CLOSED, so the real data is returned.
@@ -98,11 +98,11 @@ public class TimeBaseTest {
         // Act: Call the service 3 times. All calls will be made (and fallbacks triggered)
         // because the test will run within the 2-second sliding window.
         System.out.println("Calling service (Call 1)...");
-        protectedService.callFlakyService(); // Fails, fallback
+        protectedService.callFlakyService("time-base"); // Fails, fallback
         System.out.println("Calling service (Call 2)...");
-        protectedService.callFlakyService(); // Succeeds
+        protectedService.callFlakyService("time-base"); // Succeeds
         System.out.println("Calling service (Call 3)...");
-        protectedService.callFlakyService(); // Fails, fallback
+        protectedService.callFlakyService("time-base"); // Fails, fallback
 
         // Assert:
         // After 3 calls (minimumNumberOfCalls), the failure rate is 2/3 (66.6%).
@@ -110,7 +110,7 @@ public class TimeBaseTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
         // Act 2: Call one more time
-        String result = protectedService.callFlakyService();
+        String result = protectedService.callFlakyService("time-base");
 
         // Assert 2:
         // The circuit is OPEN, so the fallback is returned *without* calling the service.
@@ -136,8 +136,8 @@ public class TimeBaseTest {
 
         // Act:
         // Call the service twice (our permittedNumberOfCallsInHalfOpenState)
-        String result1 = protectedService.callFlakyService();
-        String result2 = protectedService.callFlakyService();
+        String result1 = protectedService.callFlakyService("time-base");
+        String result2 = protectedService.callFlakyService("time-base");
 
         // Assert:
         // Both calls succeeded, so the circuit should transition back to CLOSED.
@@ -168,13 +168,13 @@ public class TimeBaseTest {
         // Act:
         // Make the first permitted call. It fails.
         // The CB records the failure but is still HALF_OPEN, waiting for call 2.
-        String result1 = protectedService.callFlakyService();
+        String result1 = protectedService.callFlakyService("time-base");
         assertThat(result1).isEqualTo("Default Data (Fallback)");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
 
         // Act 2:
         // Make the second permitted call. It also fails.
-        String result2 = protectedService.callFlakyService();
+        String result2 = protectedService.callFlakyService("time-base");
         assertThat(result2).isEqualTo("Real Data");
 
 

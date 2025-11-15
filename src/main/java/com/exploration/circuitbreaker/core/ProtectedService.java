@@ -13,16 +13,10 @@ import org.springframework.stereotype.Service;
 public class ProtectedService {
 
     private final FlakyService flakyService;
-    private final CircuitBreaker circuitBreaker;
+    private final CircuitBreakerFactory<?, ?> circuitBreakerFactory;
 
-    @Autowired
-    public ProtectedService(FlakyService flakyService, CircuitBreakerFactory<?, ?> circuitBreakerFactory) {
-        this.flakyService = flakyService;
-        this.circuitBreaker = circuitBreakerFactory.create("backendA");
-    }
-
-    public String callFlakyService() {
-        return circuitBreaker.run(
+    public String callFlakyService(String cbInstanceName) {
+        return circuitBreakerFactory.create(cbInstanceName).run(
                 flakyService::getData,
                 this::recover
         );

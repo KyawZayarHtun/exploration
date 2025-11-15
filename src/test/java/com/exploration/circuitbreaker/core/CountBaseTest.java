@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-@ActiveProfiles("cb-count-base")
+@ActiveProfiles("test")
 public class CountBaseTest {
 
     @MockitoBean
@@ -31,7 +31,7 @@ public class CountBaseTest {
     @BeforeEach
     void resetCircuitBreaker() {
         reset(flakyService);
-        circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA");
+        circuitBreaker = circuitBreakerRegistry.circuitBreaker("count-base");
         circuitBreaker.reset();
     }
 
@@ -39,7 +39,7 @@ public class CountBaseTest {
     void testCircuitBreaker_ClosedState_Success() {
         when(flakyService.getData()).thenReturn("Real Data");
 
-        String result = protectedService.callFlakyService();
+        String result = protectedService.callFlakyService("count-base");
 
         Assertions.assertEquals("Real Data", result);
 
@@ -56,7 +56,7 @@ public class CountBaseTest {
 
         // act
         for (int i = 0; i < 5; i++) {
-            String result1= protectedService.callFlakyService();
+            String result1= protectedService.callFlakyService("count-base");
             assertThat(result1).isEqualTo("Default Data (Fallback)");
         }
 
@@ -68,7 +68,7 @@ public class CountBaseTest {
 
         // Act (Phase 2: Test the OPEN state)
         System.out.println("--- Circuit should be OPEN now (Programmatic) ---");
-        String resultAfterOpen = protectedService.callFlakyService();
+        String resultAfterOpen = protectedService.callFlakyService("count-base");
 
         // Assert (Phase 2)
         assertThat(resultAfterOpen).isEqualTo("Default Data (Fallback)");
@@ -92,7 +92,7 @@ public class CountBaseTest {
 
         // --- Act ---
         // 4. Make the one permitted "test call"
-        String result = protectedService.callFlakyService();
+        String result = protectedService.callFlakyService("count-base");
 
         // --- Assert ---
         // 5. The call should have succeeded
@@ -102,7 +102,7 @@ public class CountBaseTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         // 7. Prove it: Call again, it should still succeed
-        String nextResult = protectedService.callFlakyService();
+        String nextResult = protectedService.callFlakyService("count-base");
         assertThat(nextResult).isEqualTo("Success!");
 
         // 8. The mock was called twice (once in HALF-OPEN, once in CLOSED)
@@ -124,7 +124,7 @@ public class CountBaseTest {
 
         // --- Act ---
         // 3. Make the one permitted "test call"
-        String result = protectedService.callFlakyService();
+        String result = protectedService.callFlakyService("count-base");
 
         // --- Assert ---
         // 4. The call should fail and return the fallback
@@ -134,7 +134,7 @@ public class CountBaseTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
         // 6. Prove it: Call again, it should be short-circuited
-        String nextResult = protectedService.callFlakyService();
+        String nextResult = protectedService.callFlakyService("count-base");
         assertThat(nextResult).isEqualTo("Default Data (Fallback)");
 
         // 7. The mock was only called ONCE (the failed half-open attempt)
