@@ -17,8 +17,7 @@ resilience4j:
         failure-rate-threshold: 60
         sliding-window-type: count_based
         sliding-window-size: 5
-        wait-duration-in-open-state:
-          seconds: 1
+        wait-duration-in-open-state: 1s
         permitted-number-of-calls-in-half-open-state: 1
 
       time-base:
@@ -32,7 +31,28 @@ resilience4j:
         minimum-number-of-calls: 3
         # After opening, wait 10 seconds before transitioning to HALF_OPEN
         # We use a long time here to show that we can bypass it in the test.
-        wait-duration-in-open-state:
-          seconds: 10s
+        wait-duration-in-open-state: 10s
         # When in HALF_OPEN, permit 2 test calls
         permitted-number-of-calls-in-half-open-state: 2
+      slow-call:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 4
+        minimum-number-of-calls: 4
+        # Any call over 100s is "slow"
+        # Reminder: timelimiter is also working with 1s timeout-duration, so
+        # over 1s call will be mark as time out.
+        # to change this uncomment and override timeoutDuration from timelimiter
+        slow-call-duration-threshold: 100ms
+        # If 50% of calls are slow, open the circuit
+        slow-call-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+
+#  timelimiter:
+#    instances:
+#        # Check if you have an instance named 'slow-call' or 'backendB' (if TimeLimiter is paired)
+#        # Assuming 'slow-call' is the name given in your @TimeLimiter annotation.
+#        slow-call:
+#          # Increase this duration. For example, to 500 milliseconds (0.5 seconds)
+#          timeout-duration: 500ms
+#          # You may also need to allow the thread to be interrupted:
+#          cancel-running-future: true
