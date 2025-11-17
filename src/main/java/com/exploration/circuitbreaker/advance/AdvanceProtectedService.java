@@ -21,14 +21,14 @@ public class AdvanceProtectedService {
     }
 
     public String callWithSpecificErrors() {
-        return circuitBreakerFactory.create("backendRecord").run(
+        return circuitBreakerFactory.create("record-exception").run(
                 advanceFlakyService::callWithCustomErrors,
                 this::recover
         );
     }
 
     public String callWithIgnoredErrors() {
-        return circuitBreakerFactory.create("backendIgnore").run(
+        return circuitBreakerFactory.create("ignored-exception").run(
                 advanceFlakyService::callWithIgnorableErrors,
                 this::recover
         );    }

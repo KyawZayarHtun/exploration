@@ -19,7 +19,6 @@ resilience4j:
         sliding-window-size: 5
         wait-duration-in-open-state: 1s
         permitted-number-of-calls-in-half-open-state: 1
-
       time-base:
         # If 50% of those calls fail, open the circuit
         failure-rate-threshold: 50
@@ -46,6 +45,21 @@ resilience4j:
         # If 50% of calls are slow, open the circuit
         slow-call-rate-threshold: 50
         wait-duration-in-open-state: 10s
+      record-exception:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 5
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 60
+        # 1. Record ONLY these exceptions
+        record-exceptions:
+          - java.lang.ArrayIndexOutOfBoundsException
+          - java.lang.NullPointerException
+        # 2. ALSO record failures based on this custom predicate class
+        record-failure-predicate: com.exploration.circuitbreaker.advance.exception.CustomExceptionPredicates.RecordableFailurePredicate
+        # 3. ALSO record "successes" as failures based on this predicate
+        record-result-predicate: com.exploration.circuitbreaker.advance.exception.CustomExceptionPredicates.RecordableResultPredicate
+        wait-duration-in-open-state: 10s
+
 
 #  timelimiter:
 #    instances:
@@ -56,3 +70,6 @@ resilience4j:
 #          timeout-duration: 500ms
 #          # You may also need to allow the thread to be interrupted:
 #          cancel-running-future: true
+logging:
+  level:
+    io.github.resilience4j: DEBUG
