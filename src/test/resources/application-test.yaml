@@ -59,6 +59,13 @@ resilience4j:
         # 3. ALSO record "successes" as failures based on this predicate
         record-result-predicate: com.exploration.circuitbreaker.advance.exception.CustomExceptionPredicates.RecordableResultPredicate
         wait-duration-in-open-state: 10s
+      ignore-exception:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 5
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 60
+        ignore-exceptions:
+          - com.exploration.circuitbreaker.advance.exception.ItemNotFoundException
 
 
 #  timelimiter:

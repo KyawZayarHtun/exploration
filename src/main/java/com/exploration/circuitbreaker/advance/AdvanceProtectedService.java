@@ -28,7 +28,7 @@ public class AdvanceProtectedService {
     }
 
     public String callWithIgnoredErrors() {
-        return circuitBreakerFactory.create("ignored-exception").run(
+        return circuitBreakerFactory.create("ignore-exception").run(
                 advanceFlakyService::callWithIgnorableErrors,
                 this::recover
         );    }
