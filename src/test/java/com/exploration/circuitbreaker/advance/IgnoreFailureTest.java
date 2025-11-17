@@ -49,12 +49,7 @@ public class IgnoreFailureTest {
 
         // Act: Call 5 times
         for (int i = 0; i < 5; i++) {
-            try {
-                protectedService.callWithIgnoredErrors();
-            } catch (Exception e) {
-                // The exception is thrown (CB doesn't stop it), but it's not recorded.
-                assertThat(e).isInstanceOf(ItemNotFoundException.class);
-            }
+            protectedService.callWithIgnoredErrors();
         }
 
         // Assert: The circuit is still CLOSED because all failures were ignored.
