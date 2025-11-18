@@ -19,7 +19,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("circuit-breaker")
 public class RecordFailureTest {
 
     @Autowired

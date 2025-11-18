@@ -19,7 +19,7 @@ import static org.mockito.Mockito.when;
 
 @Slf4j
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("circuit-breaker")
 public class SlowCallTest {
 
     @Autowired
