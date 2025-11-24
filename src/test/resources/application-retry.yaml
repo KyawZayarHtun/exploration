@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: exploration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - resilience4j
+
+resilience4j:
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+
+    instances:
+
+      default:
+        max-attempts: 3
+        wait-duration: 500ms
+
+      # nextWaitDuration = previousWaitDuration * exponentialBackoffMultiplier
+      exponential-test:
+        max-attempts: 5
+        wait-duration: 2s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2.0
+        exponential-max-wait-duration: 6s
+
+      # [ baseWait * (1 - factor) , baseWait * (1 + factor) ]
+      basic-randomized-wait-test:
+        max-attempts: 3
+        wait-duration: 1000ms
+        enable-randomized-wait: true
+        randomized-wait-factor: 0.5
+      advance-randomized-wait-test:
+        max-attempts: 5
+        wait-duration: 2s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2.0
+        exponential-max-wait-duration: 6s
+        enable-randomized-wait: true
+        randomized-wait-factor: 0.5
+
+
+logging:
+  level:
+    io.github.resilience4j: DEBUG

@@ -65,7 +65,7 @@ resilience4j:
         minimum-number-of-calls: 5
         failure-rate-threshold: 60
         ignore-exceptions:
-          - com.exploration.circuitbreaker.advance.exception.ItemNotFoundException
+          - com.exploration.exception.ItemNotFoundException
 
 
 #  timelimiter:

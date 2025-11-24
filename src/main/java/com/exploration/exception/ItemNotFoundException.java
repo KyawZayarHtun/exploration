@@ -1,4 +1,4 @@
-package com.exploration.circuitbreaker.advance.exception;
+package com.exploration.exception;
 
 public class ItemNotFoundException extends RuntimeException {
     public ItemNotFoundException(String message) {

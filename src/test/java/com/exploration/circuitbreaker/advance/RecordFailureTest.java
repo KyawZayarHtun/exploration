@@ -1,6 +1,6 @@
 package com.exploration.circuitbreaker.advance;
 
-import com.exploration.circuitbreaker.advance.exception.BusinessException;
+import com.exploration.exception.BusinessException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.jupiter.api.BeforeEach;

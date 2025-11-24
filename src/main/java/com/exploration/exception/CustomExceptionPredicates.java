@@ -1,4 +1,4 @@
-package com.exploration.circuitbreaker.advance.exception;
+package com.exploration.exception;
 
 import java.util.function.Predicate;
 
