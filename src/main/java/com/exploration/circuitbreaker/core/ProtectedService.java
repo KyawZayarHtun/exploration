@@ -1,10 +1,8 @@
 package com.exploration.circuitbreaker.core;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
-import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -13,13 +11,10 @@ import org.springframework.stereotype.Service;
 public class ProtectedService {
 
     private final FlakyService flakyService;
-    private final CircuitBreakerFactory<?, ?> circuitBreakerFactory;
 
+    @CircuitBreaker(name = "#cbInstanceName", fallbackMethod = "recover")
     public String callFlakyService(String cbInstanceName) {
-        return circuitBreakerFactory.create(cbInstanceName).run(
-                flakyService::getData,
-                this::recover
-        );
+        return flakyService.getData();
     }
 
     public String recover(Throwable throwable) {

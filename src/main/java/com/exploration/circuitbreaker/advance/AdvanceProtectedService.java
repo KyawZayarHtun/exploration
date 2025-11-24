@@ -1,8 +1,8 @@
 package com.exploration.circuitbreaker.advance;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -11,27 +11,21 @@ import org.springframework.stereotype.Service;
 public class AdvanceProtectedService {
 
     private final AdvanceFlakyService advanceFlakyService;
-    private final CircuitBreakerFactory<?, ?> circuitBreakerFactory;
 
+    @CircuitBreaker(name = "slow-call", fallbackMethod = "recover")
     public String callSlowService() {
-        return circuitBreakerFactory.create("slow-call").run(
-                advanceFlakyService::callSlow,
-                this::recover
-        );
+        return advanceFlakyService.callSlow();
     }
 
+    @CircuitBreaker(name = "record-exception", fallbackMethod = "recover")
     public String callWithSpecificErrors() {
-        return circuitBreakerFactory.create("record-exception").run(
-                advanceFlakyService::callWithCustomErrors,
-                this::recover
-        );
+        return advanceFlakyService.callWithCustomErrors();
     }
 
+    @CircuitBreaker(name = "ignore-exception", fallbackMethod = "recover")
     public String callWithIgnoredErrors() {
-        return circuitBreakerFactory.create("ignore-exception").run(
-                advanceFlakyService::callWithIgnorableErrors,
-                this::recover
-        );    }
+        return advanceFlakyService.callWithIgnorableErrors();
+    }
 
     public String recover(Throwable throwable) {
         log.warn("Fallback triggered: {}", throwable.getMessage());
