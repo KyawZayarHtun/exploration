@@ -1,5 +1,6 @@
 package com.exploration.retry;
 
+import io.github.resilience4j.retry.MaxRetriesExceededException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -127,13 +128,19 @@ public class CoreFeatureTest {
 
         log.info("duration = {}", duration);
 
-        assertTrue(duration >= 500, "Should be >= 500");
-        assertTrue(duration <= 1500, "Should be <= 1500");
+        /*
+        * 500ms <=> 1500mx
+        * since max-attempts is 3, retry twice.
+        * so 1000 <=> 3000
+        * */
+
+        assertTrue(duration >= 1000, "Should be >= 1000");
+        assertTrue(duration <= 3000, "Should be <= 3000");
 
 
         assertEquals("Default Data (Fallback)", result);
 
-        verify(goofyService, times(2)).getData();
+        verify(goofyService, times(3)).getData();
 
     }
 
