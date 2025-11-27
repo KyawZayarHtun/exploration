@@ -8,8 +8,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -129,10 +133,10 @@ public class CoreFeatureTest {
         log.info("duration = {}", duration);
 
         /*
-        * 500ms <=> 1500mx
-        * since max-attempts is 3, retry twice.
-        * so 1000 <=> 3000
-        * */
+         * 500ms <=> 1500mx
+         * since max-attempts is 3, retry twice.
+         * so 1000 <=> 3000
+         * */
 
         assertTrue(duration >= 1000, "Should be >= 1000");
         assertTrue(duration <= 3000, "Should be <= 3000");
@@ -207,6 +211,24 @@ public class CoreFeatureTest {
 
         verify(goofyService, times(5)).getData();
 
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "true",
+            "false"
+    })
+    @DisplayName("Fail After Max Attempt")
+    void Fail_After_Max_Attempt(boolean failAfterMaxAttempt) {
+
+        when(goofyService.get503RestException()).thenReturn(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("{\"status\":503,\"title\":\"Service Unavailable\",\"type\":\"about:blank\",\"detail\":\"Service Unavailable\",\"message\":\"Service Unavailable\"}"));
+
+        if (failAfterMaxAttempt) {
+            assertThrows(MaxRetriesExceededException.class, () -> retryableService.get503ResponseEntity(true));
+        } else {
+            ResponseEntity<String> retryableService503ResponseEntity = retryableService.get503ResponseEntity(false);
+            assertEquals(HttpStatus.SERVICE_UNAVAILABLE, retryableService503ResponseEntity.getStatusCode());
+        }
     }
 
 

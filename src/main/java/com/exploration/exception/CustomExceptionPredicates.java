@@ -1,5 +1,11 @@
 package com.exploration.exception;
 
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+
+import java.net.http.HttpResponse;
 import java.util.function.Predicate;
 
 /**
@@ -33,6 +39,16 @@ public class CustomExceptionPredicates {
                 return "ERROR".equals(result);
             }
             return false;
+        }
+    }
+
+    /*
+    * predicate that defines what a "bad" result is
+    */
+    public static class FiveZeroThreeErrorPredicate implements Predicate<ResponseEntity<?>> {
+        @Override
+        public boolean test(ResponseEntity<?> entity) {
+            return entity.getStatusCode() == HttpStatus.SERVICE_UNAVAILABLE;
         }
     }
 
